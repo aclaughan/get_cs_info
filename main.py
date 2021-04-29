@@ -4,6 +4,11 @@ import sys
 
 import requests as requests
 
+from get_cs_device_info import get_cs_device_info
+from get_cs_port_info import get_cs_port_info
+from shorten_console_name import shorten_console_name
+from strip_device_name import strip_device_name
+
 sys.path.append('/Users/alan/')
 from secret import *
 import logging
@@ -12,37 +17,37 @@ logging.basicConfig(level=logging.INFO, filename="app.log")
 
 
 def get_cs_info():
-    #endpoint = NB_URL + 'console-server-ports/?q=&device_id=2584'
-    endpoint = NB_URL + 'devices/?limit=0&q=-cs-'
+    cs_info = get_cs_device_info()
+    cs_info = get_cs_port_info(cs_info)
 
-    HEADERS = \
-        {
-            'Authorization': 'Token ' + NB_TOKEN,
-            'Content - Type': 'application / json;charset = utf - 8'
-        }
+    for cs in cs_info.keys():
+        hostname = cs_info[cs]['name']
+        cs_ip_address = cs_info[cs]['ipv4_address']
 
-    logging.debug(f'{inspect.currentframe().f_code.co_name}: {endpoint}')
+        common = \
+            f"Host {hostname} {strip_device_name(hostname, 2)}\n" \
+            f"  User                    alanc\n" \
+            f"  Hostname                {cs_ip_address}\n" \
+            f"  ProxyJump               alanc@nso-01\n\n"
 
-    response = requests.get(endpoint, headers=HEADERS)
-    json_dev_data = json.loads(response.content)
+        port_number = 5001
 
-    cs_info = []
+        for port in cs_info[cs]['ports']:
+            if port:
+                port_number = port.keys[0]
+                hostname = shorten_console_name(port[port_number])
 
-    for cs in json_dev_data['results']:
-        info = {}
-        info['name'] = cs['name']
-        info['ipv4_address'] = cs['primary_ip4']['address'][:-3]
-        info['id'] = cs['id']
-        endpoint = NB_URL + 'console-server-ports/?limit=0' #?q=&device_id=' + info['id']
+                port_entry = \
+                    f"Host {hostname} {strip_device_name(hostname, 2)}\n" \
+                    f"  User                    alanc\n" \
+                    f"  Hostname                {cs_ip_address}\n" \
+                    f"  Port                    {port_number}" \
+                    f"  ProxyJump               alanc@nso-01\n\n"
 
-        response2 = requests.get(endpoint, headers=HEADERS)
-        json_cs_data = json.loads(response2.content)
+                common += port_entry
+                port_number += 1
 
-        cs_info.append(info)
-
-        endpoint = NB_URL + 'console-server-ports/?q=&device_id=' + info['id']
-
-    print(f"{cs['name']:>18} {cs['primary_ip4']['address'][:-3]}")
+        print(common)
 
 
 if __name__ == '__main__':
