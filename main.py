@@ -24,30 +24,28 @@ def get_cs_info():
         hostname = cs_info[cs]['name']
         cs_ip_address = cs_info[cs]['ipv4_address']
 
+        short_hostname = strip_device_name(hostname, 2)
+
         common = \
-            f"Host {hostname} {strip_device_name(hostname, 2)}\n" \
+            f"Host {hostname} {short_hostname}\n" \
             f"  User                    alanc\n" \
             f"  Hostname                {cs_ip_address}\n" \
             f"  ProxyJump               alanc@nso-01\n\n"
 
-        port_number = 5001
-
         for port in cs_info[cs]['ports']:
-            if port:
-                port_number = port.keys[0]
-                hostname = shorten_console_name(port[port_number])
+            if cs_info[cs]['ports'][port]:
+                hostname = shorten_console_name(cs_info[cs]['ports'][port])
 
                 port_entry = \
                     f"Host {hostname} {strip_device_name(hostname, 2)}\n" \
                     f"  User                    alanc\n" \
                     f"  Hostname                {cs_ip_address}\n" \
-                    f"  Port                    {port_number}" \
+                    f"  Port                    {port}\n" \
                     f"  ProxyJump               alanc@nso-01\n\n"
 
                 common += port_entry
-                port_number += 1
 
-        print(common)
+        print(common, end='')
 
 
 if __name__ == '__main__':

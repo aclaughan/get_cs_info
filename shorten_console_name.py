@@ -7,8 +7,11 @@ import logging
 def shorten_console_name(long_name: str) -> str:
     short_name = long_name.replace("RP0_console0", "c0")
     short_name = short_name.replace("RP1_console0", "c1")
+    short_name = short_name.replace("RP0_console", "c0")
+    short_name = short_name.replace("RP1_console", "c1")
     short_name = short_name.replace("RSP0_console0", "c0")
     short_name = short_name.replace("RSP1_console0", "c1")
+    short_name = short_name.replace("console0", "c0")
 
     logging.info(f"shortened {long_name} to {short_name}")
 
